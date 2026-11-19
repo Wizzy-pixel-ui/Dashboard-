@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-tmly-media-guard="1">(function(){"use strict";
+var T=window.__tmly||(window.__tmly=(function(){
+var o={},n=String(window.name||"");
+if(n.slice(0,5)==="tmly:"){n.slice(5).split("&").forEach(function(kv){
+var i=kv.indexOf("=");if(i>0){o[kv.slice(0,i)]=kv.slice(i+1)}})}
+return o})());
+if(T.presentation!=="preview"){return}
+var K="tmly:media-muted:"+String(location.pathname).replace(/[^/]*$/,"");
+var muted=false;try{muted=localStorage.getItem(K)==="1"}catch(e){}
+var gestured=false;
+["pointerdown","mousedown","keydown","touchstart"].forEach(function(t){
+document.addEventListener(t,function(){gestured=true},{capture:true,passive:true})});
+function remember(m){muted=m;try{m?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}}
+function announcePaused(el){try{el.dispatchEvent(new Event("pause"))}catch(e){}}
+function harden(el){
+el.autoplay=false;el.removeAttribute("autoplay");
+if(el.getAttribute("preload")==="auto"){el.setAttribute("preload","none")}
+if(muted){el.muted=true}
+if(!gestured&&!el.paused){try{el.pause()}catch(e){}}}
+var play=HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play=function(){
+if(!gestured){announcePaused(this);
+return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false);this.muted=false}
+return play.apply(this,arguments)};
+var acProtos=[];
+function guardAC(n){
+var N=window[n];if(!N||!N.prototype){return}
+if(acProtos.indexOf(N.prototype)<0){acProtos.push(N.prototype);
+var res=N.prototype.resume;
+if(typeof res==="function"){N.prototype.resume=function(){
+if(!gestured){return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false)}
+return res.apply(this,arguments)}}}
+var W=function(o){var c=arguments.length?new N(o):new N();
+if(!gestured){try{c.suspend()}catch(e){}}return c};
+W.prototype=N.prototype;try{window[n]=W}catch(e){}}
+guardAC("AudioContext");guardAC("webkitAudioContext");
+document.addEventListener("play",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&!gestured){try{el.pause()}catch(err){}}},true);
+document.addEventListener("pause",function(e){
+if(e.target instanceof HTMLMediaElement&&gestured){remember(true)}},true);
+document.addEventListener("volumechange",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&gestured){remember(el.muted||el.volume===0)}},true);
+function sweep(n){if(n&&n.querySelectorAll){var l=n.querySelectorAll("audio,video");
+for(var i=0;i<l.length;i++){harden(l[i])}}}
+new MutationObserver(function(rs){for(var i=0;i<rs.length;i++){var a=rs[i].addedNodes;
+for(var j=0;j<a.length;j++){var n=a[j];
+if(n instanceof HTMLMediaElement){harden(n)}else{sweep(n)}}}})
+.observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener("DOMContentLoaded",function(){sweep(document)});
+sweep(document)})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSV Dashboard Studio — drop a file, get a dashboard</title>
+<style>
+:root{
+  --bg:#0b0f14;
+  --panel:#121a23;
+  --panel2:#17212c;
+  --line:#233040;
+  --line2:#2e3f52;
+  --text:#e8eef5;
+  --muted:#8fa2b5;
+  --dim:#63788c;
+  --amber:#f0a04b;
+  --teal:#4ecdc4;
+  --blue:#6c9bd1;
+  --red:#e0685c;
+  --green:#7bc47f;
+  --violet:#a78bda;
+  --pink:#e08fb0;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(240,160,75,.10), transparent 60%),
+    radial-gradient(800px 500px at 92% 4%, rgba(78,205,196,.08), transparent 60%);
+  pointer-events:none;z-index:0;
+}
+.wrap{position:relative;z-index:1;max-width:1560px;margin:0 auto;padding:0 22px 80px}
+
+/* ---------- header ---------- */
+header{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:22px 0 18px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:26px;
+}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{
+  width:42px;height:42px;border-radius:11px;flex:0 0 auto;
+  background:linear-gradient(150deg,var(--amber),#c9762c);
+  display:grid;place-items:center;
+  box-shadow:0 6px 18px rgba(240,160,75,.22);
+}
+.logo svg{width:22px;height:22px;display:block}
+h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.2px}
+.sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+.spacer{flex:1 1 auto}
+.btn{
+  appearance:none;border:1px solid var(--line2);background:var(--panel2);
+  color:var(--text);font:inherit;font-size:13.5px;font-weight:550;
+  padding:9px 16px;border-radius:10px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .16s,border-color .16s,transform .12s;
+  white-space:nowrap;
+}
+.btn:hover{background:#1e2b39;border-color:#3b5068}
+.btn:active{transform:translateY(1px)}
+.btn.primary{
+  background:linear-gradient(150deg,var(--amber),#d4822f);
+  border-color:transparent;color:#1a1206;font-weight:650;
+  box-shadow:0 4px 14px rgba(240,160,75,.24);
+}
+.btn.primary:hover{background:linear-gradient(150deg,#f5ad5e,#dd8c37)}
+.btn.ghost{background:transparent}
+.btn svg{width:15px;height:15px}
+
+/* ---------- dropzone ---------- */
+#dropzone{
+  border:2px dashed var(--line2);
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(23,33,44,.7),rgba(18,26,35,.5));
+  padding:64px 28px;
+  text-align:center;
+  transition:border-color .2s,background .2s,transform .2s;
+  cursor:pointer;
+  margin-bottom:26px;
+}
+#dropzone:hover{border-color:#4a6480;background:rgba(23,33,44,.9)}
+#dropzone.drag{border-color:var(--amber);background:rgba(240,160,75,.07);transform:scale(1.004)}
+.dz-icon{
+  width:64px;height:64px;margin:0 auto 18px;border-radius:18px;
+  background:rgba(240,160,75,.12);border:1px solid rgba(240,160,75,.28);
+  display:grid;place-items:center;
+}
+.dz-icon svg{width:30px;height:30px;stroke:var(--amber)}
+#dropzone h2{margin:0 0 8px;font-size:22px;font-weight:640;letter-spacing:-.3px}
+#dropzone p{margin:0 auto;max-width:560px;color:var(--muted);font-size:14px}
+.dz-actions{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.dz-hint{margin-top:20px;font-size:12px;color:var(--dim)}
+
+/* ---------- file bar ---------- */
+#filebar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 18px;margin-bottom:16px;
+}
+.fname{font-weight:600;font-size:14px;display:flex;align-items:center;gap:9px;min-width:0}
+.fname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}
+.chip{
+  font-size:11.5px;padding:3px 9px;border-radius:999px;
+  background:rgba(78,205,196,.12);color:var(--teal);
+  border:1px solid rgba(78,205,196,.25);font-weight:600;white-space:nowrap;
+}
+.chip.warn{background:rgba(240,160,75,.12);color:var(--amber);border-color:rgba(240,160,75,.28)}
+.chip.bad{background:rgba(224,104,92,.12);color:var(--red);border-color:rgba(224,104,92,.28)}
+
+/* ---------- quality strip ---------- */
+#quality{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;margin-bottom:22px;
+}
+.qcell{
+  background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:11px 14px;
+}
+.qcell .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:600}
+.qcell .v{font-size:16px;font-weight:640;margin-top:3px;font-variant-numeric:tabular-nums}
+.qcell .v small{font-size:11.5px;color:var(--muted);font-weight:500;margin-left:4px}
+
+/* ---------- KPI ---------- */
+#kpis{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));
+  gap:14px;margin-bottom:24px;
+}
+.kpi{
+  position:relative;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:17px 18px 15px;
+  animation:fadeUp .5s cubic-bezier(.22,.9,.3,1) both;
+  animation-delay:calc(var(--i,0) * 55ms);
+}
+.kpi::after{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent,var(--amber));opacity:.85;
+}
+.kpi .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:650}
+.kpi .value{
+  font-size:27px;font-weight:680;letter-spacing:-.7px;margin-top:7px;
+  font-variant-numeric:tabular-nums;line-height:1.15;
+}
+.kpi .value .u{font-size:14px;color:var(--muted);font-weight:550;margin-left:3px;letter-spacing:0}
+.kpi .foot{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.kpi .foot b{color:var(--text);font-weight:600}
+
+/* ---------- filters ---------- */
+#filters{
+  position:sticky;top:0;z-index:20;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;
+  background:rgba(11,15,20,.92);
+  backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 16px;margin-bottom:22px;
+}
+.fgroup{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fgroup label{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:650}
+select,input[type=text],input[type=date]{
+  appearance:none;background:var(--panel2);border:1px solid var(--line2);
+  color:var(--text);font:inherit;font-size:13px;padding:7px 11px;border-radius:8px;
+  min-width:130px;max-width:230px;outline:none;
+  transition:border-color .15s;
+}
+select:focus,input:focus{border-color:var(--amber)}
+input[type=date]{color-scheme:dark}
+.fgroup.grow{flex:1 1 200px}
+.fgroup.grow input{width:100%;max-width:none}
+.fcount{font-size:12px;color:var(--muted);margin-left:auto;padding-bottom:8px;white-space:nowrap}
+.fcount b{color:var(--amber);font-weight:650}
+
+/* ---------- charts ---------- */
+#charts{
+  display:grid;grid-template-columns:repeat(12,1fr);
+  gap:16px;margin-bottom:26px;
+}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px 14px;
+  animation:fadeUp .55s cubic-bezier(.22,.9,.3,1) both;
+  animation-delay:calc(var(--i,0) * 45ms);
+  min-width:0;
+}
+.card.w4{grid-column:span 4}
+.card.w6{grid-column:span 6}
+.card.w8{grid-column:span 8}
+.card.w12{grid-column:span 12}
+.card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:640;letter-spacing:-.1px;margin:0}
+.card-sub{font-size:11.5px;color:var(--dim);margin-top:2px}
+.card-tools{margin-left:auto;display:flex;gap:5px;flex:0 0 auto}
+.tbtn{
+  appearance:none;border:1px solid var(--line2);background:transparent;color:var(--muted);
+  font:inherit;font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;cursor:pointer;
+  transition:all .14s;
+}
+.tbtn:hover{color:var(--text);border-color:#3b5068}
+.tbtn.on{background:rgba(240,160,75,.15);border-color:rgba(240,160,75,.4);color:var(--amber)}
+.chartbox{position:relative;height:290px}
+.chartbox.tall{height:340px}
+.chartbox.short{height:230px}
+
+/* heatmap */
+.heat{display:grid;gap:2px;font-size:10.5px;overflow:auto}
+.heat .hc{
+  display:grid;place-items:center;border-radius:4px;padding:7px 2px;
+  font-variant-numeric:tabular-nums;font-weight:600;color:#0b0f14;
+  transition:transform .12s;
+}
+.heat .hc:hover{transform:scale(1.06);outline:1px solid rgba(255,255,255,.35)}
+.heat .hl{
+  color:var(--muted);font-weight:600;padding:7px 8px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;font-size:10.5px;
+}
+.heat .hl.row{text-align:right}
+
+/* ---------- table ---------- */
+#tablewrap{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;
+}
+.thead{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:15px 18px;border-bottom:1px solid var(--line);
+}
+.thead h3{margin:0;font-size:14.5px;font-weight:640}
+.thead .cnt{font-size:12px;color:var(--dim)}
+.tsearch{margin-left:auto;position:relative}
+.tsearch input{padding-left:32px;min-width:220px}
+.tsearch svg{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;stroke:var(--dim);pointer-events:none;
+}
+.tscroll{overflow:auto;max-height:560px}
+table{border-collapse:collapse;width:100%;font-size:12.8px}
+thead th{
+  position:sticky;top:0;z-index:2;
+  background:#16202b;text-align:left;padding:10px 13px;
+  font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--muted);font-weight:650;white-space:nowrap;
+  border-bottom:1px solid var(--line2);cursor:pointer;user-select:none;
+  transition:color .14s;
+}
+thead th:hover{color:var(--text)}
+thead th .ar{opacity:.3;margin-left:5px;font-size:9px}
+thead th.sorted .ar{opacity:1;color:var(--amber)}
+tbody td{
+  padding:8px 13px;border-bottom:1px solid rgba(35,48,64,.55);
+  white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;
+}
+tbody tr:hover{background:rgba(240,160,75,.045)}
+tbody td.num{text-align:right}
+tbody td.dt{color:var(--teal)}
+tbody td.nul{color:var(--dim);font-style:italic}
+.tfoot{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 18px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--muted);
+}
+.pager{margin-left:auto;display:flex;gap:6px;align-items:center}
+.pager button{
+  appearance:none;border:1px solid var(--line2);background:var(--panel2);color:var(--text);
+  font:inherit;font-size:12px;padding:5px 11px;border-radius:7px;cursor:pointer;
+}
+.pager button:disabled{opacity:.35;cursor:default}
+.pager button:not(:disabled):hover{border-color:#3b5068}
+
+/* ---------- misc ---------- */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);
+  background:#1d2a38;border:1px solid var(--line2);color:var(--text);
+  padding:11px 20px;border-radius:10px;font-size:13px;font-weight:550;
+  opacity:0;pointer-events:none;transition:all .25s;z-index:100;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.empty-note{
+  grid-column:span 12;text-align:center;color:var(--dim);
+  padding:40px;font-size:13.5px;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+@media (max-width:1100px){
+  .card.w4,.card.w6,.card.w8{grid-column:span 12}
+}
+@media (max-width:640px){
+  .wrap{padding:0 14px 60px}
+  h1{font-size:16px}
+  .sub{display:none}
+  #dropzone{padding:44px 18px}
+  #dropzone h2{font-size:18px}
+  .kpi .value{font-size:23px}
+  .chartbox{height:250px}
+  .fgroup,.fgroup select,.fgroup input{min-width:0;width:100%;max-width:none}
+  .fgroup{flex:1 1 100%}
+  .fcount{margin-left:0;padding-bottom:0}
+  .tsearch{margin-left:0;width:100%}
+  .tsearch input{width:100%;min-width:0}
+  .fname span{max-width:180px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>
+      </svg>
+    </div>
+    <div>
+      <h1>CSV Dashboard Studio</h1>
+      <div class="sub">Drop any CSV — columns are detected and the dashboard builds itself</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="btnDemo" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/></svg>
+    Load demo data
+  </button>
+  <button class="btn primary" id="btnUpload" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+    Upload CSV
+  </button>
+  <input type="file" id="fileInput" accept=".csv,.tsv,.txt,text/csv" hidden>
+</header>
+
+<section id="dropzone" tabindex="0" role="button" aria-label="Upload a CSV file">
+  <div class="dz-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>
+    </svg>
+  </div>
+  <h2>Drop your CSV here</h2>
+  <p>Dates, numbers and categories are detected automatically. You get KPI cards, a dozen interactive charts, live filters and a searchable table — all generated from your file, in your browser.</p>
+  <div class="dz-actions">
+    <button class="btn primary" id="btnBrowse" type="button">Choose a file</button>
+    <button class="btn" id="btnDemo2" type="button">Try the demo dataset</button>
+  </div>
+  <div class="dz-hint">Nothing is uploaded anywhere — parsing happens entirely on this device.</div>
+</section>
+
+<section id="app" hidden>
+  <div id="filebar"></div>
+  <div id="quality"></div>
+  <div id="kpis"></div>
+  <div id="filters"></div>
+  <div id="charts"></div>
+  <div id="tablewrap"></div>
+</section>
+
+</div>
+<div id="toast"></div>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script>
+"use strict";
+
+/* ============================================================
+   0. Utilities
+   ============================================================ */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+const PALETTE = ["#f0a04b","#4ecdc4","#6c9bd1","#e0685c","#7bc47f","#a78bda","#e08fb0","#d9c26a","#5fb3a1","#c98a5e"];
+
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function fmtNum(v, dp){
+  if (v === null || v === undefined || !isFinite(v)) return "—";
+  const a = Math.abs(v);
+  if (a >= 1e9) return (v / 1e9).toFixed(2) + "B";
+  if (a >= 1e6) return (v / 1e6).toFixed(2) + "M";
+  if (a >= 1e5) return (v / 1e3).toFixed(1) + "K";
+  if (a >= 1e4) return (v / 1e3).toFixed(2) + "K";
+  if (a >= 1000) return v.toLocaleString(undefined, {maximumFractionDigits: 0});
+  if (a >= 1) return v.toLocaleString(undefined, {maximumFractionDigits: dp === undefined ? 2 : dp});
+  if (a === 0) return "0";
+  return v.toPrecision(3);
+}
+
+function fmtInt(v){
+  if (v === null || !isFinite(v)) return "—";
+  return Math.round(v).toLocaleString();
+}
+
+function esc(s){
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function mean(a){ return a.length ? a.reduce((x, y) => x + y, 0) / a.length : null; }
+function median(a){
+  if (!a.length) return null;
+  const s = a.slice().sort((x, y) => x - y);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function stdev(a){
+  if (a.length < 2) return 0;
+  const m = mean(a);
+  return Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1));
+}
+function quantile(sorted, q){
+  if (!sorted.length) return null;
+  const pos = (sorted.length - 1) * q;
+  const lo = Math.floor(pos), hi = Math.ceil(pos);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
+function pearson(xs, ys){
+  const n = Math.min(xs.length, ys.length);
+  if (n < 3) return null;
+  let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0, c = 0;
+  for (let i = 0; i < n; i++){
+    const x = xs[i], y = ys[i];
+    if (x === null || y === null || !isFinite(x) || !isFinite(y)) continue;
+    c++; sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y;
+  }
+  if (c < 3) return null;
+  const num = c * sxy - sx * sy;
+  const den = Math.sqrt((c * sxx - sx * sx) * (c * syy - sy * sy));
+  if (!den) return null;
+  return num / den;
+}
+
+/* ============================================================
+   1. CSV parsing
+   ============================================================ */
+function detectDelimiter(text){
+  const sample = text.slice(0, 8000).split(/\r?\n/).filter(l => l.trim()).slice(0, 12);
+  const cands = [",", ";", "\t", "|"];
+  let best = ",", bestScore = -1;
+  for (const d of cands){
+    const counts = sample.map(l => {
+      let n = 0, q = false;
+      for (let i = 0; i < l.length; i++){
+        const ch = l[i];
+        if (ch === '"') q = !q;
+        else if (ch === d && !q) n++;
+      }
+      return n;
+    });
+    if (!counts.length) continue;
+    const avg = mean(counts);
+    if (avg <= 0) continue;
+    const variance = stdev(counts);
+    const score = avg - variance * 0.6;
+    if (score > bestScore){ bestScore = score; best = d; }
+  }
+  return best;
+}
+
+function parseCSV(text){
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const delim = detectDelimiter(text);
+  const rows = [];
+  let row = [], field = "", inQ = false, i = 0;
+  const n = text.length;
+  while (i < n){
+    const ch = text[i];
+    if (inQ){
+      if (ch === '"'){
+        if (text[i + 1] === '"'){ field += '"'; i += 2; continue; }
+        inQ = false; i++; continue;
+      }
+      field += ch; i++; continue;
+    }
+    if (ch === '"'){ inQ = true; i++; continue; }
+    if (ch === delim){ row.push(field); field = ""; i++; continue; }
+    if (ch === "\r"){ i++; continue; }
+    if (ch === "\n"){
+      row.push(field); rows.push(row); row = []; field = ""; i++; continue;
+    }
+    field += ch; i++;
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+
+  // drop fully-empty rows
+  const clean = rows.filter(r => r.some(c => c !== null && String(c).trim() !== ""));
+  if (!clean.length) return {headers: [], rows: [], delim};
+
+  let headers = clean[0].map((h, idx) => {
+    const t = String(h).trim().replace(/^["']|["']$/g, "");
+    return t || ("Column " + (idx + 1));
+  });
+  // de-duplicate header names
+  const seen = {};
+  headers = headers.map(h => {
+    if (seen[h] === undefined){ seen[h] = 1; return h; }
+    seen[h]++; return h + " (" + seen[h] + ")";
+  });
+
+  const body = clean.slice(1).map(r => {
+    const out = new Array(headers.length).fill("");
+    for (let k = 0; k < headers.length; k++) out[k] = r[k] === undefined ? "" : String(r[k]).trim();
+    return out;
+  });
+  return {headers, rows: body, delim};
+}
+
+/* ============================================================
+   2. Type inference
+   ============================================================ */
+const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+
+/* Decimal convention is decided once per file (see detectDecimalStyle) so that
+   "1.234,56" (European) and "1,234.56" (US) are never confused. */
+let DECIMAL_STYLE = "us"; // "us" | "eu"
+
+function detectDecimalStyle(values){
+  let eu = 0, us = 0;
+  for (const raw of values){
+    const s = String(raw).trim();
+    if (!s) continue;
+    // 1.234,56  or  1234,56  → European
+    if (/^-?\d{1,3}(\.\d{3})+,\d+$/.test(s) || /^-?\d+,\d{1,}$/.test(s)) eu++;
+    // 1,234.56  or  1234.56  → US
+    else if (/^-?\d{1,3}(,\d{3})+\.\d+$/.test(s) || /^-?\d+\.\d{1,}$/.test(s)) us++;
+  }
+  return eu > us ? "eu" : "us";
+}
+
+function parseNumeric(raw){
+  if (raw === null || raw === undefined) return null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  let neg = false;
+  if (/^\(.*\)$/.test(s)){ neg = true; s = s.slice(1, -1); }
+  s = s.replace(/[$€£¥₦₹%\s]/g, "");
+  if (s === "" || s === "-" || s === "—" || s === "n/a" || s === "N/A" || s === "null" || s === "NULL") return null;
+
+  if (DECIMAL_STYLE === "eu"){
+    // dots are thousands separators, comma is the decimal point
+    if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s) || /^-?\d+,\d+$/.test(s)){
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      s = s.replace(/,/g, "");
+    }
+  } else {
+    s = s.replace(/,/g, "");
+  }
+
+  if (/^-?\d*\.?\d+(e[-+]?\d+)?$/i.test(s)){
+    const v = parseFloat(s);
+    if (!isFinite(v)) return null;
+    return neg ? -v : v;
+  }
+  return null;
+}
+
+function parseDateWith(raw, fmt){
+  const s = String(raw).trim();
+  if (!s) return null;
+  let m;
+  switch (fmt){
+    case "iso":
+      m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/);
+      if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0));
+      return null;
+    case "ym":
+      m = s.match(/^(\d{4})-(\d{1,2})$/);
+      if (m) return Date.UTC(+m[1], +m[2] - 1, 1);
+      return null;
+    case "ymd_slash":
+      m = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+      if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+      return null;
+    case "dmy":
+      m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+      if (m){
+        const d = +m[1], mo = +m[2];
+        if (d > 31 || mo > 12) return null;
+        return Date.UTC(+m[3], mo - 1, d);
+      }
+      return null;
+    case "mdy":
+      m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+      if (m){
+        const mo = +m[1], d = +m[2];
+        if (d > 31 || mo > 12) return null;
+        return Date.UTC(+m[3], mo - 1, d);
+      }
+      return null;
+    case "dmy_time":
+      m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})[ T](\d{1,2}):(\d{2})/);
+      if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]);
+      return null;
+    case "mon_yr":
+      m = s.match(/^([A-Za-z]{3,9})[\s\-,]+(\d{4})$/);
+      if (m){
+        const mo = MONTHS[m[1].toLowerCase().slice(0, 4)] ?? MONTHS[m[1].toLowerCase().slice(0, 3)];
+        if (mo === undefined) return null;
+        return Date.UTC(+m[2], mo, 1);
+      }
+      return null;
+    case "d_mon_yr":
+      m = s.match(/^(\d{1,2})[\s\-]([A-Za-z]{3,9})[\s\-,]+(\d{4})$/);
+      if (m){
+        const mo = MONTHS[m[2].toLowerCase().slice(0, 3)];
+        if (mo === undefined) return null;
+        return Date.UTC(+m[3], mo, +m[1]);
+      }
+      return null;
+    case "mon_d_yr":
+      m = s.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})$/);
+      if (m){
+        const mo = MONTHS[m[1].toLowerCase().slice(0, 3)];
+        if (mo === undefined) return null;
+        return Date.UTC(+m[3], mo, +m[2]);
+      }
+      return null;
+    case "yr_mon":
+      m = s.match(/^(\d{4})[\/\-](\d{1,2})$/);
+      if (m) return Date.UTC(+m[1], +m[2] - 1, 1);
+      return null;
+  }
+  return null;
+}
+
+const DATE_FMTS = ["iso","ymd_slash","ym","dmy_time","dmy","mdy","mon_d_yr","d_mon_yr","mon_yr","yr_mon"];
+
+function detectDateFormat(values){
+  const sample = values.filter(v => v !== "" && v !== null).slice(0, 400);
+  if (sample.length < 3) return null;
+  let best = null, bestRate = 0;
+  for (const fmt of DATE_FMTS){
+    let ok = 0;
+    const seen = new Set();
+    for (const v of sample){
+      const t = parseDateWith(v, fmt);
+      if (t !== null && isFinite(t)){ ok++; seen.add(t); }
+    }
+    const rate = ok / sample.length;
+    if (rate >= 0.9 && seen.size >= 2 && rate > bestRate){
+      bestRate = rate; best = fmt;
+    }
+  }
+  // disambiguate dmy vs mdy
+  if (best === "dmy" || best === "mdy"){
+    let firstBig = 0, secondBig = 0;
+    for (const v of sample){
+      const m = String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+      if (!m) continue;
+      if (+m[1] > 12) firstBig++;
+      if (+m[2] > 12) secondBig++;
+    }
+    if (firstBig > 0 && secondBig === 0) best = "dmy";
+    else if (secondBig > 0 && firstBig === 0) best = "mdy";
+    else best = "dmy"; // ambiguous → day-first
+  }
+  return best;
+}
+
+function inferColumns(headers, rows){
+  const n = rows.length;
+  return headers.map((name, idx) => {
+    const raw = rows.map(r => r[idx]);
+    const nonEmpty = raw.filter(v => v !== "" && v !== null && v !== undefined);
+    const nullCount = n - nonEmpty.length;
+    const uniq = new Set(nonEmpty);
+    const col = {
+      name, idx, nullCount, unique: uniq.size,
+      nonEmptyCount: nonEmpty.length,
+      type: "text", values: raw
+    };
+
+    // numeric?
+    let numOk = 0;
+    const nums = [];
+    for (const v of nonEmpty){
+      const p = parseNumeric(v);
+      if (p !== null){ numOk++; nums.push(p); } else nums.push(null);
+    }
+    const numRate = nonEmpty.length ? numOk / nonEmpty.length : 0;
+
+    // date?
+    const dfmt = detectDateFormat(nonEmpty);
+
+    if (dfmt && numRate < 0.9){
+      col.type = "date";
+      col.dateFmt = dfmt;
+      const ts = raw.map(v => parseDateWith(v, dfmt));
+      col.ts = ts;
+      const valid = ts.filter(t => t !== null && isFinite(t));
+      col.minTs = valid.length ? Math.min.apply(null, valid) : null;
+      col.maxTs = valid.length ? Math.max.apply(null, valid) : null;
+      col.dateValid = valid.length;
+      return col;
+    }
+
+    if (numRate >= 0.9 && nonEmpty.length > 0){
+      col.type = "number";
+      col.nums = nums;
+      const valid = nums.filter(v => v !== null);
+      col.min = valid.length ? Math.min.apply(null, valid) : null;
+      col.max = valid.length ? Math.max.apply(null, valid) : null;
+      col.mean = mean(valid);
+      col.median = median(valid);
+      col.std = stdev(valid);
+      const sorted = valid.slice().sort((a, b) => a - b);
+      col.q1 = quantile(sorted, 0.25);
+      col.q3 = quantile(sorted, 0.75);
+      col.sum = valid.reduce((a, b) => a + b, 0);
+      col.negatives = valid.filter(v => v < 0).length;
+      col.zeros = valid.filter(v => v === 0).length;
+      return col;
+    }
+
+    // category vs text
+    const avgLen = nonEmpty.length ? mean(nonEmpty.map(v => String(v).length)) : 0;
+    const cap = Math.max(2, Math.min(60, Math.ceil(nonEmpty.length * 0.6)));
+    const smallSet = nonEmpty.length <= 60 && uniq.size <= 20;
+    const isCat = (uniq.size <= cap || smallSet) && avgLen <= 42 && uniq.size < nonEmpty.length + 1;
+    col.type = isCat ? "category" : "text";
+    if (isCat){
+      const counts = new Map();
+      for (const v of nonEmpty) counts.set(v, (counts.get(v) || 0) + 1);
+      col.counts = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    }
+    return col;
+  });
+}
+
+/* ============================================================
+   3. State
+   ============================================================ */
+const state = {
+  fileName: "",
+  headers: [],
+  rows: [],
+  cols: [],
+  dateCol: null,
+  numCols: [],
+  catCols: [],
+  measure: null,
+  filters: {from: null, to: null, cats: {}},
+  search: "",
+  sort: {col: null, dir: 1},
+  page: 1,
+  pageSize: 25,
+  charts: [],
+  trendType: "line",
+  filtered: []
+};
+
+/* ============================================================
+   4. Load + build
+   ============================================================ */
+function loadData(fileName, text){
+  let parsed;
+  try {
+    parsed = parseCSV(text);
+  } catch (e){
+    toast("Could not parse that file: " + e.message);
+    return;
+  }
+  if (!parsed.headers.length || !parsed.rows.length){
+    toast("That file has no data rows.");
+    return;
+  }
+  state.fileName = fileName;
+  state.headers = parsed.headers;
+  state.rows = parsed.rows;
+
+  // decide the decimal convention once, from the whole file
+  const allVals = [];
+  for (const r of parsed.rows){ for (const v of r) if (v) allVals.push(v); }
+  DECIMAL_STYLE = detectDecimalStyle(allVals);
+
+  state.cols = inferColumns(parsed.headers, parsed.rows);
+
+  state.dateCol = state.cols.find(c => c.type === "date") || null;
+  state.numCols = state.cols.filter(c => c.type === "number");
+  state.catCols = state.cols.filter(c => c.type === "category");
+
+  state.measure = pickMeasure(state.numCols);
+  state.filters = {from: null, to: null, cats: {}};
+  state.search = "";
+  state.sort = {col: null, dir: 1};
+  state.page = 1;
+
+  $("#dropzone").hidden = true;
+  $("#app").hidden = false;
+
+  renderFileBar();
+  renderQuality();
+  renderFilters();
+  renderAll();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+const MEASURE_HINTS = ["revenue","sales","amount","total","value","price","cost","profit","qty","quantity","units","count","volume","score","rate","production","oil","gas","water","spend","income","margin","weight","duration","size","population","gdp","cases","deaths","temperature"];
+
+function pickMeasure(nums){
+  if (!nums.length) return null;
+  let best = null, bestScore = -Infinity;
+  for (const c of nums){
+    const lname = c.name.toLowerCase();
+    let score = 0;
+    for (let i = 0; i < MEASURE_HINTS.length; i++){
+      if (lname.includes(MEASURE_HINTS[i])){ score += (MEASURE_HINTS.length - i) * 2; break; }
+    }
+    // prefer columns that look like additive quantities
+    if (c.min !== null && c.min >= 0) score += 3;
+    if (c.unique > 1) score += 2;
+    if (c.std > 0) score += 1;
+    if (/id$|^id|code|zip|year|month|day/i.test(c.name)) score -= 8;
+    if (score > bestScore){ bestScore = score; best = c; }
+  }
+  return best;
+}
+
+/* ============================================================
+   5. Filtering
+   ============================================================ */
+function applyFilters(){
+  const f = state.filters;
+  const q = state.search.trim().toLowerCase();
+  const catFilters = Object.keys(f.cats).filter(k => f.cats[k] !== "" && f.cats[k] !== "__all__");
+
+  const res = [];
+  for (let i = 0; i < state.rows.length; i++){
+    const r = state.rows[i];
+    if (state.dateCol && (f.from !== null || f.to !== null)){
+      const t = state.dateCol.ts[i];
+      if (t === null || !isFinite(t)) continue;
+      if (f.from !== null && t < f.from) continue;
+      if (f.to !== null && t > f.to) continue;
+    }
+    let ok = true;
+    for (const cname of catFilters){
+      const col = state.cols.find(c => c.name === cname);
+      if (!col) continue;
+      if (r[col.idx] !== f.cats[cname]){ ok = false; break; }
+    }
+    if (!ok) continue;
+    if (q){
+      let hit = false;
+      for (let k = 0; k < r.length; k++){
+        if (String(r[k]).toLowerCase().indexOf(q) !== -1){ hit = true; break; }
+      }
+      if (!hit) continue;
+    }
+    res.push(r);
+  }
+  state.filtered = res;
+  return res;
+}
+
+/* ============================================================
+   6. Render: file bar + quality
+   ============================================================ */
+function renderFileBar(){
+  const nRows = state.rows.length;
+  const nCols = state.headers.length;
+  const typeCount = {date: 0, number: 0, category: 0, text: 0};
+  state.cols.forEach(c => typeCount[c.type]++);
+  $("#filebar").innerHTML =
+    '<div class="fname">' +
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4ecdc4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
+      '<span title="' + esc(state.fileName) + '">' + esc(state.fileName) + '</span>' +
+    '</div>' +
+    '<span class="chip">' + fmtInt(nRows) + ' rows</span>' +
+    '<span class="chip">' + nCols + ' columns</span>' +
+    (typeCount.date ? '<span class="chip">' + typeCount.date + ' date</span>' : '') +
+    (typeCount.number ? '<span class="chip">' + typeCount.number + ' numeric</span>' : '') +
+    (typeCount.category ? '<span class="chip">' + typeCount.category + ' categorical</span>' : '') +
+    '<div class="spacer"></div>' +
+    '<button class="btn ghost" id="btnExport" type="button">Download filtered CSV</button>' +
+    '<button class="btn ghost" id="btnNew" type="button">Load another file</button>';
+  $("#btnNew").onclick = () => {
+    $("#app").hidden = true;
+    $("#dropzone").hidden = false;
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
+  $("#btnExport").onclick = exportCSV;
+}
+
+function renderQuality(){
+  const nRows = state.rows.length;
+  const nCols = state.headers.length;
+  let cells = 0, missing = 0;
+  state.cols.forEach(c => { cells += nRows; missing += c.nullCount; });
+  const missPct = cells ? (missing / cells * 100) : 0;
+
+  // duplicate rows
+  const seen = new Set();
+  let dups = 0;
+  for (const r of state.rows){
+    const k = r.join("\u0001");
+    if (seen.has(k)) dups++; else seen.add(k);
+  }
+  const constCols = state.cols.filter(c => c.unique <= 1).length;
+
+  let span = "—";
+  if (state.dateCol && state.dateCol.minTs !== null){
+    const a = new Date(state.dateCol.minTs), b = new Date(state.dateCol.maxTs);
+    const days = Math.round((state.dateCol.maxTs - state.dateCol.minTs) / 86400000);
+    span = isoDay(a) + " → " + isoDay(b);
+    span += " (" + fmtInt(days) + "d)";
+  }
+
+  const cellsHtml = [
+    ["Rows", fmtInt(nRows), ""],
+    ["Columns", String(nCols), ""],
+    ["Missing cells", missPct.toFixed(1) + "%", fmtInt(missing) + " of " + fmtInt(cells)],
+    ["Duplicate rows", fmtInt(dups), dups ? "flagged" : "none"],
+    ["Constant columns", String(constCols), constCols ? "single value" : "none"],
+    ["Date span", span, state.dateCol ? state.dateCol.name : "no date column"]
+  ].map(([k, v, s]) =>
+    '<div class="qcell"><div class="k">' + k + '</div><div class="v">' + esc(v) +
+    (s ? '<small>' + esc(s) + '</small>' : '') + '</div></div>'
+  ).join("");
+  $("#quality").innerHTML = cellsHtml;
+}
+
+function isoDay(d){
+  return d.toISOString().slice(0, 10);
+}
+
+/* ============================================================
+   7. Render: KPIs
+   ============================================================ */
+function renderKPIs(){
+  const rows = state.filtered;
+  const m = state.measure;
+  const cards = [];
+
+  cards.push({label: "Records", value: fmtInt(rows.length), unit: "", foot: "of " + fmtInt(state.rows.length) + " total", accent: "var(--teal)"});
+
+  const idxs = filteredIndices();
+
+  if (m){
+    const vv = idxs.map(i => m.nums[i]).filter(v => v !== null && isFinite(v));
+    const sum = vv.reduce((a, b) => a + b, 0);
+    const avg = mean(vv);
+    const mx = vv.length ? Math.max.apply(null, vv) : null;
+    const mn = vv.length ? Math.min.apply(null, vv) : null;
+
+    cards.push({label: "Total " + m.name, value: fmtNum(sum), unit: "", foot: "sum of " + fmtInt(vv.length) + " values", accent: "var(--amber)"});
+    cards.push({label: "Average " + m.name, value: fmtNum(avg), unit: "", foot: "median " + fmtNum(median(vv)), accent: "var(--blue)"});
+    cards.push({label: "Peak " + m.name, value: fmtNum(mx), unit: "", foot: "low " + fmtNum(mn), accent: "var(--red)"});
+  }
+
+  if (state.catCols.length){
+    const c = state.catCols[0];
+    const set = new Set();
+    for (const r of rows) if (r[c.idx] !== "") set.add(r[c.idx]);
+    let topName = "—", topCount = 0;
+    const counts = new Map();
+    for (const r of rows){ if (r[c.idx] !== "") counts.set(r[c.idx], (counts.get(r[c.idx]) || 0) + 1); }
+    for (const [k, v] of counts) if (v > topCount){ topCount = v; topName = k; }
+    cards.push({label: "Unique " + c.name, value: fmtInt(set.size), unit: "", foot: "top: " + topName + " (" + fmtInt(topCount) + ")", accent: "var(--violet)"});
+  }
+
+  if (state.dateCol && state.dateCol.minTs !== null){
+    const ts = [];
+    for (const i of idxs){
+      const t = state.dateCol.ts[i];
+      if (t !== null && isFinite(t)) ts.push(t);
+    }
+    if (ts.length){
+      const days = Math.round((Math.max.apply(null, ts) - Math.min.apply(null, ts)) / 86400000);
+      cards.push({label: "Period covered", value: fmtInt(days), unit: "days", foot: isoDay(new Date(Math.min.apply(null, ts))) + " → " + isoDay(new Date(Math.max.apply(null, ts))), accent: "var(--green)"});
+    }
+  }
+
+  // completeness
+  let cells = 0, missing = 0;
+  for (const r of rows){ cells += r.length; for (const v of r) if (v === "") missing++; }
+  const comp = cells ? (100 - missing / cells * 100) : 0;
+  cards.push({label: "Completeness", value: comp.toFixed(1), unit: "%", foot: fmtInt(missing) + " empty cells", accent: comp > 95 ? "var(--green)" : comp > 80 ? "var(--amber)" : "var(--red)"});
+
+  $("#kpis").innerHTML = cards.map((c, i) =>
+    '<div class="kpi" style="--i:' + i + ';--accent:' + c.accent + '">' +
+      '<div class="label">' + esc(c.label) + '</div>' +
+      '<div class="value" data-target="' + esc(c.value) + '">' + esc(c.value) +
+        (c.unit ? '<span class="u">' + esc(c.unit) + '</span>' : '') + '</div>' +
+      '<div class="foot">' + esc(c.foot) + '</div>' +
+    '</div>'
+  ).join("");
+}
+
+/* ============================================================
+   8. Render: filters
+   ============================================================ */
+function renderFilters(){
+  const parts = [];
+
+  if (state.dateCol){
+    const c = state.dateCol;
+    parts.push(
+      '<div class="fgroup"><label>From</label><input type="date" id="fFrom" value="' +
+      (c.minTs !== null ? isoDay(new Date(c.minTs)) : "") + '" min="' +
+      (c.minTs !== null ? isoDay(new Date(c.minTs)) : "") + '" max="' +
+      (c.maxTs !== null ? isoDay(new Date(c.maxTs)) : "") + '"></div>' +
+      '<div class="fgroup"><label>To</label><input type="date" id="fTo" value="' +
+      (c.maxTs !== null ? isoDay(new Date(c.maxTs)) : "") + '" min="' +
+      (c.minTs !== null ? isoDay(new Date(c.minTs)) : "") + '" max="' +
+      (c.maxTs !== null ? isoDay(new Date(c.maxTs)) : "") + '"></div>'
+    );
+  }
+
+  if (state.numCols.length > 1){
+    parts.push('<div class="fgroup"><label>Measure</label><select id="fMeasure">' +
+      state.numCols.map(c => '<option value="' + esc(c.name) + '"' + (state.measure && c.name === state.measure.name ? " selected" : "") + '>' + esc(c.name) + '</option>').join("") +
+      '</select></div>');
+  }
+
+  const catPick = state.catCols.slice(0, 3);
+  catPick.forEach(c => {
+    const opts = c.counts.slice(0, 200).map(([k, v]) =>
+      '<option value="' + esc(k) + '">' + esc(k) + ' (' + fmtInt(v) + ')</option>').join("");
+    parts.push('<div class="fgroup"><label>' + esc(c.name) + '</label><select data-cat="' + esc(c.name) + '">' +
+      '<option value="__all__">All</option>' + opts + '</select></div>');
+  });
+
+  parts.push('<div class="fcount" id="fCount"></div>');
+
+  $("#filters").innerHTML = parts.join("");
+
+  const fromEl = $("#fFrom"), toEl = $("#fTo");
+  if (fromEl) fromEl.onchange = () => {
+    state.filters.from = fromEl.value ? Date.parse(fromEl.value + "T00:00:00Z") : null;
+    state.page = 1; renderAll();
+  };
+  if (toEl) toEl.onchange = () => {
+    state.filters.to = toEl.value ? Date.parse(toEl.value + "T23:59:59Z") : null;
+    state.page = 1; renderAll();
+  };
+  const mEl = $("#fMeasure");
+  if (mEl) mEl.onchange = () => {
+    state.measure = state.numCols.find(c => c.name === mEl.value) || state.measure;
+    renderAll();
+  };
+  $$("#filters select[data-cat]").forEach(sel => {
+    sel.onchange = () => {
+      state.filters.cats[sel.dataset.cat] = sel.value;
+      state.page = 1; renderAll();
+    };
+  });
+}
+
+/* ============================================================
+   9. Aggregation helpers
+   ============================================================ */
+function granularity(){
+  if (!state.dateCol || state.dateCol.minTs === null) return "month";
+  const span = (state.dateCol.maxTs - state.dateCol.minTs) / 86400000;
+  if (span <= 45) return "day";
+  if (span <= 4000) return "month";
+  return "year";
+}
+
+function bucketOf(ts, gran){
+  const d = new Date(ts);
+  if (gran === "day") return d.toISOString().slice(0, 10);
+  if (gran === "month") return d.toISOString().slice(0, 7);
+  return String(d.getUTCFullYear());
+}
+
+function bucketLabel(k, gran){
+  if (gran === "month"){
+    const [y, m] = k.split("-");
+    const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return names[+m - 1] + " " + y.slice(2);
+  }
+  return k;
+}
+
+function filteredIndices(){
+  const set = new Set(state.filtered);
+  const out = [];
+  for (let i = 0; i < state.rows.length; i++) if (set.has(state.rows[i])) out.push(i);
+  return out;
+}
+
+function timeSeries(measureCol, agg){
+  const gran = granularity();
+  const map = new Map();
+  const idxs = filteredIndices();
+  for (const i of idxs){
+    const t = state.dateCol.ts[i];
+    if (t === null || !isFinite(t)) continue;
+    const k = bucketOf(t, gran);
+    const v = measureCol ? measureCol.nums[i] : 1;
+    if (v === null || !isFinite(v)) continue;
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(v);
+  }
+  const keys = Array.from(map.keys()).sort();
+  const vals = keys.map(k => {
+    const a = map.get(k);
+    if (agg === "sum") return a.reduce((x, y) => x + y, 0);
+    if (agg === "count") return a.length;
+    return mean(a);
+  });
+  return {keys, labels: keys.map(k => bucketLabel(k, gran)), vals, gran};
+}
+
+/* ============================================================
+   10. Chart builders
+   ============================================================ */
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: {duration: 750, easing: "easeOutQuart"},
+  interaction: {mode: "index", intersect: false},
+  plugins: {
+    legend: {
+      labels: {color: "#8fa2b5", boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: "circle", font: {size: 11}, padding: 14}
+    },
+    tooltip: {
+      backgroundColor: "#1b2733",
+      borderColor: "#2e3f52",
+      borderWidth: 1,
+      titleColor: "#e8eef5",
+      bodyColor: "#c3d0dd",
+      padding: 10,
+      cornerRadius: 8,
+      titleFont: {size: 12, weight: "600"},
+      bodyFont: {size: 12},
+      displayColors: true,
+      boxWidth: 8, boxHeight: 8, usePointStyle: true
+    }
+  }
+};
+
+function axisStyle(opts){
+  return Object.assign({
+    grid: {color: "rgba(35,48,64,.7)", drawBorder: false},
+    ticks: {color: "#7d90a3", font: {size: 10.5}, maxRotation: 0, autoSkipPadding: 14},
+    border: {display: false}
+  }, opts || {});
+}
+
+function destroyCharts(){
+  state.charts.forEach(c => { try { c.destroy(); } catch (e){} });
+  state.charts = [];
+}
+
+function makeChart(canvas, cfg){
+  const c = new Chart(canvas.getContext("2d"), cfg);
+  state.charts.push(c);
+  return c;
+}
+
+function cardShell(id, title, sub, width, tools){
+  return '<div class="card ' + width + '" style="--i:' + (state.charts.length + 1) + '">' +
+    '<div class="card-head"><div><h3 class="card-title">' + esc(title) + '</h3>' +
+    '<div class="card-sub">' + esc(sub) + '</div></div>' +
+    (tools ? '<div class="card-tools">' + tools + '</div>' : '') +
+    '</div><div class="chartbox" id="' + id + '"></div></div>';
+}
+
+/* ============================================================
+   11. Render all charts
+   ============================================================ */
+function renderCharts(){
+  destroyCharts();
+  const host = $("#charts");
+  const idxs = filteredIndices();
+  const m = state.measure;
+  const html = [];
+
+  if (!idxs.length){
+    host.innerHTML = '<div class="empty-note">No rows match the current filters.</div>';
+    return;
+  }
+
+  /* --- 1. Trend over time --- */
+  if (state.dateCol && m){
+    const series = [m].concat(state.numCols.filter(c => c !== m).slice(0, 2));
+    const agg = "sum";
+    const sets = series.map((c, i) => {
+      const s = timeSeries(c, agg);
+      return {col: c, s, color: PALETTE[i % PALETTE.length]};
+    });
+    const labels = sets[0].s.labels;
+    html.push(cardShell("cTrend", "Trend over time",
+      "Monthly total of " + series.map(c => c.name).join(", ") + " — " + sets[0].s.gran + " buckets",
+      "w8",
+      '<button class="tbtn on" data-tt="line">Line</button><button class="tbtn" data-tt="bar">Bar</button><button class="tbtn" data-tt="area">Area</button>'));
+    html.push('<div class="card w4" style="--i:2"><div class="card-head"><div><h3 class="card-title">Records per ' + sets[0].s.gran + '</h3><div class="card-sub">Row count in each time bucket</div></div></div><div class="chartbox" id="cCount"></div></div>');
+  }
+
+  /* --- 2. Cumulative --- */
+  if (state.dateCol && m){
+    html.push(cardShell("cCum", "Cumulative " + m.name,
+      "Running total across the selected period", "w6"));
+  }
+
+  /* --- 3. Top categories --- */
+  if (state.catCols.length && m){
+    const c = state.catCols[0];
+    html.push(cardShell("cTop", "Top " + c.name + " by " + m.name,
+      "Ranked by total " + m.name + " — top 12", "w6"));
+  }
+
+  /* --- 4. Donut share --- */
+  if (state.catCols.length){
+    const c = state.catCols[0];
+    html.push(cardShell("cDonut", "Share of records by " + c.name,
+      "Distribution of row counts across categories", "w4"));
+  }
+
+  /* --- 5. Histogram --- */
+  if (m){
+    html.push(cardShell("cHist", "Distribution of " + m.name,
+      "How values are spread — histogram with 20 bins", "w4"));
+  }
+
+  /* --- 6. Correlation heatmap --- */
+  if (state.numCols.length >= 2){
+    html.push(cardShell("cHeat", "Correlation matrix",
+      "Pearson r between numeric columns", "w4"));
+  }
+
+  /* --- 7. Scatter --- */
+  if (state.numCols.length >= 2){
+    html.push(cardShell("cScatter", "Strongest relationship",
+      "Scatter of the most correlated numeric pair", "w6"));
+  }
+
+  /* --- 8. Stacked by category over time --- */
+  if (state.dateCol && state.catCols.length && m){
+    html.push(cardShell("cStack", m.name + " by " + state.catCols[0].name + " over time",
+      "Stacked " + granularity() + " totals — top 6 categories", "w6"));
+  }
+
+  /* --- 9. Range by category --- */
+  if (state.catCols.length && m){
+    html.push(cardShell("cRange", "Spread of " + m.name + " by " + state.catCols[0].name,
+      "Min → max range with mean marker — top 10", "w6"));
+  }
+
+  /* --- 10. Radar / grouped means --- */
+  if (state.catCols.length && state.numCols.length >= 3){
+    html.push(cardShell("cRadar", "Numeric profile by " + state.catCols[0].name,
+      "Mean of each numeric column, normalised 0–100", "w6"));
+  }
+
+  /* --- 11. Second measure trend --- */
+  if (state.dateCol && state.numCols.length >= 2){
+    const second = state.numCols.find(c => c !== m);
+    if (second){
+      html.push(cardShell("cSecond", second.name + " over time",
+        "Monthly average of " + second.name, "w6"));
+    }
+  }
+
+  /* --- 12. Category counts bar --- */
+  if (state.catCols.length >= 2 && crossIsInformative(idxs)){
+    html.push(cardShell("cCross", state.catCols[0].name + " × " + state.catCols[1].name,
+      "Record counts across the two leading categories", "w6"));
+  }
+
+  /* --- 13. Fallbacks so sparse files still get a real dashboard --- */
+  if (!state.dateCol && m){
+    html.push(cardShell("cIndex", m.name + " by record",
+      "Every row in file order — no date column detected", "w8"));
+    const labelCol = state.cols.find(c => c.type === "text" || c.type === "category");
+    if (labelCol){
+      html.push(cardShell("cRank", "Ranked by " + m.name,
+        "Top 15 rows by " + m.name + ", labelled by " + labelCol.name, "w4"));
+    }
+  }
+  if (state.numCols.length === 1 && !state.dateCol){
+    html.push(cardShell("cSorted", "Sorted " + m.name,
+      "All values ascending — shows shape and outliers", "w6"));
+  }
+
+  host.innerHTML = html.join("");
+
+  /* ---- build each ---- */
+  try { buildTrend(idxs); } catch (e){ console.warn("trend", e); }
+  try { buildCount(idxs); } catch (e){ console.warn("count", e); }
+  try { buildCumulative(idxs); } catch (e){ console.warn("cum", e); }
+  try { buildTop(idxs); } catch (e){ console.warn("top", e); }
+  try { buildDonut(idxs); } catch (e){ console.warn("donut", e); }
+  try { buildHist(idxs); } catch (e){ console.warn("hist", e); }
+  try { buildHeat(idxs); } catch (e){ console.warn("heat", e); }
+  try { buildScatter(idxs); } catch (e){ console.warn("scatter", e); }
+  try { buildStack(idxs); } catch (e){ console.warn("stack", e); }
+  try { buildRange(idxs); } catch (e){ console.warn("range", e); }
+  try { buildRadar(idxs); } catch (e){ console.warn("radar", e); }
+  try { buildSecond(idxs); } catch (e){ console.warn("second", e); }
+  try { buildCross(idxs); } catch (e){ console.warn("cross", e); }
+  try { buildIndex(idxs); } catch (e){ console.warn("index", e); }
+  try { buildRank(idxs); } catch (e){ console.warn("rank", e); }
+  try { buildSorted(idxs); } catch (e){ console.warn("sorted", e); }
+
+  // trend type toggles
+  $$("#charts .tbtn[data-tt]").forEach(b => {
+    b.onclick = () => {
+      state.trendType = b.dataset.tt;
+      $$("#charts .tbtn[data-tt]").forEach(x => x.classList.toggle("on", x === b));
+      try { buildTrend(filteredIndices()); } catch (e){}
+    };
+  });
+}
+
+function buildTrend(idxs){
+  const el = $("#cTrend");
+  if (!el) return;
+  const m = state.measure;
+  const series = [m].concat(state.numCols.filter(c => c !== m).slice(0, 2));
+  const sets = series.map((c, i) => ({col: c, s: timeSeries(c, "sum"), color: PALETTE[i % PALETTE.length]}));
+  const labels = sets[0].s.labels;
+  const type = state.trendType;
+  const datasets = sets.map((st, i) => ({
+    label: st.col.name,
+    data: st.s.vals,
+    borderColor: st.color,
+    backgroundColor: type === "area" ? hexA(st.color, 0.16) : (type === "bar" ? hexA(st.color, 0.75) : hexA(st.color, 0.1)),
+    borderWidth: type === "bar" ? 0 : 2,
+    pointRadius: type === "bar" ? 0 : (labels.length > 40 ? 0 : 2.5),
+    pointHoverRadius: 5,
+    pointBackgroundColor: st.color,
+    tension: 0.32,
+    fill: type === "area",
+    type: type === "bar" ? "bar" : "line",
+    borderRadius: type === "bar" ? 3 : 0,
+    yAxisID: i === 0 ? "y" : "y1"
+  }));
+  const cfg = Object.assign({}, CHART_DEFAULTS, {
+    type: type === "bar" ? "bar" : "line",
+    data: {labels, datasets},
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      scales: {
+        x: axisStyle({grid: {display: false}}),
+        y: axisStyle({position: "left", ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}}),
+        y1: {display: sets.length > 1, position: "right", grid: {display: false}, ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}, border: {display: false}}
+      }
+    })
+  });
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, cfg);
+}
+
+function buildCount(idxs){
+  const el = $("#cCount");
+  if (!el) return;
+  const s = timeSeries(null, "count");
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {
+      labels: s.labels,
+      datasets: [{label: "Rows", data: s.vals, backgroundColor: hexA("#4ecdc4", 0.7), borderRadius: 3, borderWidth: 0}]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {x: axisStyle({grid: {display: false}}), y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtInt(v)}})}
+    })
+  }));
+}
+
+function buildCumulative(idxs){
+  const el = $("#cCum");
+  if (!el) return;
+  const m = state.measure;
+  const s = timeSeries(m, "sum");
+  let run = 0;
+  const cum = s.vals.map(v => (run += v));
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "line",
+    data: {
+      labels: s.labels,
+      datasets: [{
+        label: "Cumulative " + m.name,
+        data: cum,
+        borderColor: "#f0a04b",
+        backgroundColor: hexA("#f0a04b", 0.14),
+        borderWidth: 2.2, fill: true, tension: 0.25,
+        pointRadius: 0, pointHoverRadius: 5
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {x: axisStyle({grid: {display: false}}), y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}})}
+    })
+  }));
+}
+
+function catAggregate(catCol, measureCol, agg){
+  const map = new Map();
+  const idxs = filteredIndices();
+  for (const i of idxs){
+    const k = state.rows[i][catCol.idx];
+    if (k === "") continue;
+    const v = measureCol ? measureCol.nums[i] : 1;
+    if (v === null || !isFinite(v)) continue;
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(v);
+  }
+  const arr = Array.from(map.entries()).map(([k, a]) => ({
+    key: k,
+    value: agg === "sum" ? a.reduce((x, y) => x + y, 0) : agg === "count" ? a.length : mean(a),
+    n: a.length
+  }));
+  arr.sort((a, b) => b.value - a.value);
+  return arr;
+}
+
+function buildTop(idxs){
+  const el = $("#cTop");
+  if (!el) return;
+  const c = state.catCols[0], m = state.measure;
+  const arr = catAggregate(c, m, "sum").slice(0, 12);
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {
+      labels: arr.map(d => d.key),
+      datasets: [{
+        label: m.name,
+        data: arr.map(d => d.value),
+        backgroundColor: arr.map((d, i) => hexA(PALETTE[i % PALETTE.length], 0.82)),
+        borderRadius: 4, borderWidth: 0
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      indexAxis: "y",
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {
+        x: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}}),
+        y: axisStyle({grid: {display: false}, ticks: {color: "#a8b8c8", font: {size: 11}}})
+      }
+    })
+  }));
+}
+
+function buildDonut(idxs){
+  const el = $("#cDonut");
+  if (!el) return;
+  const c = state.catCols[0];
+  const arr = catAggregate(c, null, "count");
+  const top = arr.slice(0, 8);
+  const rest = arr.slice(8).reduce((s, d) => s + d.value, 0);
+  const labels = top.map(d => d.key);
+  const vals = top.map(d => d.value);
+  if (rest > 0){ labels.push("Other"); vals.push(rest); }
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: labels.map((_, i) => hexA(PALETTE[i % PALETTE.length], 0.85)),
+        borderColor: "#121a23", borderWidth: 2, hoverOffset: 8
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      cutout: "58%",
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {position: "right", labels: {color: "#8fa2b5", boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", font: {size: 10.5}, padding: 9}},
+        tooltip: Object.assign({}, CHART_DEFAULTS.plugins.tooltip, {
+          callbacks: {
+            label: ctx => {
+              const tot = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              return " " + ctx.label + ": " + fmtInt(ctx.parsed) + " (" + (ctx.parsed / tot * 100).toFixed(1) + "%)";
+            }
+          }
+        })
+      })
+    })
+  }));
+}
+
+function buildHist(idxs){
+  const el = $("#cHist");
+  if (!el) return;
+  const m = state.measure;
+  const vals = idxs.map(i => m.nums[i]).filter(v => v !== null && isFinite(v));
+  if (!vals.length) return;
+  const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const bins = 20;
+  const w = (mx - mn) / bins || 1;
+  const counts = new Array(bins).fill(0);
+  for (const v of vals){
+    let b = Math.floor((v - mn) / w);
+    if (b >= bins) b = bins - 1;
+    if (b < 0) b = 0;
+    counts[b]++;
+  }
+  const labels = counts.map((_, i) => fmtNum(mn + i * w));
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{label: "Rows", data: counts, backgroundColor: hexA("#6c9bd1", 0.78), borderRadius: 2, borderWidth: 0, barPercentage: 1, categoryPercentage: 0.98}]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {
+        x: axisStyle({grid: {display: false}, ticks: {color: "#7d90a3", font: {size: 9}, maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 6}}),
+        y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtInt(v)}})
+      }
+    })
+  }));
+}
+
+function buildHeat(idxs){
+  const el = $("#cHeat");
+  if (!el) return;
+  const cols = state.numCols.slice(0, 8);
+  const n = cols.length;
+  const data = cols.map(a => cols.map(b => {
+    if (a === b) return 1;
+    const xs = idxs.map(i => a.nums[i]);
+    const ys = idxs.map(i => b.nums[i]);
+    return pearson(xs, ys);
+  }));
+  const cell = 100 / (n + 1);
+  let html = '<div class="heat" style="grid-template-columns:minmax(70px,1.4fr) repeat(' + n + ',minmax(0,1fr))">';
+  html += '<div class="hl"></div>';
+  cols.forEach(c => { html += '<div class="hl" style="text-align:center;font-size:9.5px">' + esc(shortName(c.name)) + '</div>'; });
+  for (let i = 0; i < n; i++){
+    html += '<div class="hl row" title="' + esc(cols[i].name) + '">' + esc(shortName(cols[i].name)) + '</div>';
+    for (let j = 0; j < n; j++){
+      const v = data[i][j];
+      const bg = v === null ? "#1b2733" : corrColor(v);
+      const txt = v === null ? "—" : v.toFixed(2);
+      html += '<div class="hc" style="background:' + bg + '" title="' + esc(cols[i].name) + ' × ' + esc(cols[j].name) + ': ' + txt + '">' + txt + '</div>';
+    }
+  }
+  html += '</div>';
+  el.style.height = "auto";
+  el.innerHTML = html;
+}
+
+function shortName(s, max){
+  const lim = max || 11;
+  return s.length > lim ? s.slice(0, lim - 1) + "…" : s;
+}
+
+function corrColor(v){
+  const a = Math.min(1, Math.abs(v));
+  if (v >= 0) return "rgba(78,205,196," + (0.12 + a * 0.78) + ")";
+  return "rgba(224,104,92," + (0.12 + a * 0.78) + ")";
+}
+
+function buildScatter(idxs){
+  const el = $("#cScatter");
+  if (!el) return;
+  const cols = state.numCols.slice(0, 8);
+  let best = null, bestR = 0;
+  for (let i = 0; i < cols.length; i++){
+    for (let j = i + 1; j < cols.length; j++){
+      const r = pearson(idxs.map(k => cols[i].nums[k]), idxs.map(k => cols[j].nums[k]));
+      if (r !== null && Math.abs(r) > Math.abs(bestR)){ bestR = r; best = [cols[i], cols[j]]; }
+    }
+  }
+  if (!best) return;
+  const [cx, cy] = best;
+  const pts = [];
+  const step = Math.max(1, Math.floor(idxs.length / 2500));
+  for (let k = 0; k < idxs.length; k += step){
+    const i = idxs[k];
+    const x = cx.nums[i], y = cy.nums[i];
+    if (x === null || y === null || !isFinite(x) || !isFinite(y)) continue;
+    pts.push({x, y});
+  }
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "scatter",
+    data: {
+      datasets: [{
+        label: cx.name + " vs " + cy.name,
+        data: pts,
+        backgroundColor: hexA("#f0a04b", 0.5),
+        borderColor: hexA("#f0a04b", 0.9),
+        pointRadius: pts.length > 800 ? 1.6 : 3,
+        pointHoverRadius: 6
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {display: false},
+        tooltip: Object.assign({}, CHART_DEFAULTS.plugins.tooltip, {
+          callbacks: {label: ctx => cx.name + ": " + fmtNum(ctx.parsed.x) + "  ·  " + cy.name + ": " + fmtNum(ctx.parsed.y)}
+        })
+      }),
+      scales: {
+        x: axisStyle({title: {display: true, text: cx.name, color: "#7d90a3", font: {size: 10.5}}, ticks: {color: "#7d90a3", font: {size: 10}, callback: v => fmtNum(v)}}),
+        y: axisStyle({title: {display: true, text: cy.name, color: "#7d90a3", font: {size: 10.5}}, ticks: {color: "#7d90a3", font: {size: 10}, callback: v => fmtNum(v)}})
+      }
+    })
+  }));
+  const sub = el.parentElement.querySelector(".card-sub");
+  if (sub) sub.textContent = cx.name + " vs " + cy.name + " — Pearson r = " + bestR.toFixed(3);
+}
+
+function buildStack(idxs){
+  const el = $("#cStack");
+  if (!el) return;
+  const c = state.catCols[0], m = state.measure;
+  const gran = granularity();
+  const cats = catAggregate(c, m, "sum").slice(0, 6).map(d => d.key);
+  const map = new Map();
+  for (const i of idxs){
+    const t = state.dateCol.ts[i];
+    if (t === null || !isFinite(t)) continue;
+    const k = bucketOf(t, gran);
+    const cat = state.rows[i][c.idx];
+    if (cats.indexOf(cat) === -1) continue;
+    const v = m.nums[i];
+    if (v === null || !isFinite(v)) continue;
+    if (!map.has(k)) map.set(k, {});
+    const o = map.get(k);
+    o[cat] = (o[cat] || 0) + v;
+  }
+  const keys = Array.from(map.keys()).sort();
+  const datasets = cats.map((cat, i) => ({
+    label: cat,
+    data: keys.map(k => (map.get(k)[cat] || 0)),
+    backgroundColor: hexA(PALETTE[i % PALETTE.length], 0.8),
+    borderWidth: 0,
+    borderRadius: 2
+  }));
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {labels: keys.map(k => bucketLabel(k, gran)), datasets},
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {position: "bottom", labels: {color: "#8fa2b5", boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", font: {size: 10.5}, padding: 10}}
+      }),
+      scales: {
+        x: axisStyle({stacked: true, grid: {display: false}}),
+        y: axisStyle({stacked: true, ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}})
+      }
+    })
+  }));
+}
+
+function buildRange(idxs){
+  const el = $("#cRange");
+  if (!el) return;
+  const c = state.catCols[0], m = state.measure;
+  const map = new Map();
+  for (const i of idxs){
+    const k = state.rows[i][c.idx];
+    if (k === "") continue;
+    const v = m.nums[i];
+    if (v === null || !isFinite(v)) continue;
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(v);
+  }
+  const arr = Array.from(map.entries()).map(([k, a]) => {
+    const s = a.slice().sort((x, y) => x - y);
+    return {key: k, min: s[0], max: s[s.length - 1], mean: mean(a), n: a.length};
+  }).sort((a, b) => b.mean - a.mean).slice(0, 10);
+
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {
+      labels: arr.map(d => d.key),
+      datasets: [
+        {label: "Range", data: arr.map(d => [d.min, d.max]), backgroundColor: hexA("#6c9bd1", 0.35), borderColor: hexA("#6c9bd1", 0.8), borderWidth: 1, borderRadius: 4, borderSkipped: false},
+        {label: "Mean", data: arr.map(d => d.mean), backgroundColor: hexA("#f0a04b", 0.95), borderRadius: 3, barPercentage: 0.22, categoryPercentage: 0.7}
+      ]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      indexAxis: "y",
+      layout: {padding: {right: 8}},
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {position: "bottom", labels: {color: "#8fa2b5", boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", font: {size: 10}, padding: 8}}
+      }),
+      scales: {
+        x: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}}),
+        y: axisStyle({grid: {display: false}, ticks: {color: "#a8b8c8", font: {size: 10.5}}})
+      }
+    })
+  }));
+}
+
+function buildRadar(idxs){
+  const el = $("#cRadar");
+  if (!el) return;
+  const c = state.catCols[0];
+  const nums = state.numCols.slice(0, 6);
+  const cats = catAggregate(c, state.measure, "sum").slice(0, 5).map(d => d.key);
+  const means = {};
+  for (const cat of cats){
+    means[cat] = nums.map(nc => {
+      const vals = [];
+      for (const i of idxs){
+        if (state.rows[i][c.idx] !== cat) continue;
+        const v = nc.nums[i];
+        if (v !== null && isFinite(v)) vals.push(v);
+      }
+      return mean(vals);
+    });
+  }
+  // normalise per axis
+  const maxes = nums.map((_, j) => {
+    let mx = 0;
+    for (const cat of cats){ const v = means[cat][j]; if (v !== null && Math.abs(v) > mx) mx = Math.abs(v); }
+    return mx || 1;
+  });
+  const datasets = cats.map((cat, i) => ({
+    label: cat,
+    data: means[cat].map((v, j) => v === null ? 0 : Math.abs(v) / maxes[j] * 100),
+    borderColor: PALETTE[i % PALETTE.length],
+    backgroundColor: hexA(PALETTE[i % PALETTE.length], 0.14),
+    borderWidth: 2,
+    pointRadius: 2.5,
+    pointBackgroundColor: PALETTE[i % PALETTE.length]
+  }));
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "radar",
+    data: {labels: nums.map(n => shortName(n.name, 8)), datasets},
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      layout: {padding: {top: 6, bottom: 2, left: 4, right: 4}},
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {position: "bottom", labels: {color: "#8fa2b5", boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", font: {size: 10.5}, padding: 10}}
+      }),
+      scales: {
+        r: {
+          min: 0, max: 100,
+          grid: {color: "rgba(35,48,64,.9)"},
+          angleLines: {color: "rgba(35,48,64,.9)"},
+          pointLabels: {color: "#8fa2b5", font: {size: 9.5}, padding: 4},
+          ticks: {display: false}
+        }
+      }
+    })
+  }));
+}
+
+function buildSecond(idxs){
+  const el = $("#cSecond");
+  if (!el) return;
+  const m = state.measure;
+  const second = state.numCols.find(c => c !== m);
+  if (!second) return;
+  const s = timeSeries(second, "mean");
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "line",
+    data: {
+      labels: s.labels,
+      datasets: [{
+        label: "Avg " + second.name,
+        data: s.vals,
+        borderColor: "#4ecdc4",
+        backgroundColor: hexA("#4ecdc4", 0.12),
+        borderWidth: 2, fill: true, tension: 0.3,
+        pointRadius: s.labels.length > 40 ? 0 : 2.5, pointHoverRadius: 5
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {x: axisStyle({grid: {display: false}}), y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}})}
+    })
+  }));
+}
+
+/* A cross-tab of two categories is only worth a chart when the combination
+   actually varies — otherwise every cell is 1 and the chart says nothing. */
+function crossIsInformative(idxs){
+  const c1 = state.catCols[0], c2 = state.catCols[1];
+  if (!c1 || !c2) return false;
+  const seen = new Set();
+  for (const i of idxs) seen.add(state.rows[i][c1.idx] + "\u0001" + state.rows[i][c2.idx]);
+  return seen.size < idxs.length;
+}
+
+function buildCross(idxs){
+  const el = $("#cCross");
+  if (!el) return;
+  const c1 = state.catCols[0], c2 = state.catCols[1];
+  const rows1 = catAggregate(c1, null, "count").slice(0, 8).map(d => d.key);
+  const rows2 = catAggregate(c2, null, "count").slice(0, 6).map(d => d.key);
+  const grid = {};
+  for (const i of idxs){
+    const a = state.rows[i][c1.idx], b = state.rows[i][c2.idx];
+    if (rows1.indexOf(a) === -1 || rows2.indexOf(b) === -1) continue;
+    const k = a + "\u0001" + b;
+    grid[k] = (grid[k] || 0) + 1;
+  }
+  const datasets = rows2.map((b, j) => ({
+    label: b,
+    data: rows1.map(a => grid[a + "\u0001" + b] || 0),
+    backgroundColor: hexA(PALETTE[j % PALETTE.length], 0.8),
+    borderWidth: 0, borderRadius: 2
+  }));
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {labels: rows1, datasets},
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {
+        legend: {position: "bottom", labels: {color: "#8fa2b5", boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", font: {size: 10.5}, padding: 10}}
+      }),
+      scales: {
+        x: axisStyle({stacked: true, grid: {display: false}, ticks: {color: "#8fa2b5", font: {size: 10}, maxRotation: 40}}),
+        y: axisStyle({stacked: true, ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtInt(v)}})
+      }
+    })
+  }));
+}
+
+function buildIndex(idxs){
+  const el = $("#cIndex");
+  if (!el) return;
+  const m = state.measure;
+  const pts = [];
+  const step = Math.max(1, Math.floor(idxs.length / 3000));
+  for (let k = 0; k < idxs.length; k += step){
+    const i = idxs[k];
+    const v = m.nums[i];
+    if (v === null || !isFinite(v)) continue;
+    pts.push({x: k + 1, y: v});
+  }
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: m.name,
+        data: pts,
+        borderColor: "#f0a04b",
+        backgroundColor: hexA("#f0a04b", 0.13),
+        borderWidth: 1.6, fill: true, tension: 0.2,
+        pointRadius: 0, pointHoverRadius: 5
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {
+        x: axisStyle({type: "linear", grid: {display: false}, title: {display: true, text: "Row number", color: "#7d90a3", font: {size: 10.5}}, ticks: {color: "#7d90a3", font: {size: 10}, callback: v => fmtInt(v)}}),
+        y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}})
+      }
+    })
+  }));
+}
+
+function buildRank(idxs){
+  const el = $("#cRank");
+  if (!el) return;
+  const m = state.measure;
+  const labelCol = state.cols.find(c => c.type === "text" || c.type === "category");
+  if (!labelCol) return;
+  const arr = idxs.map(i => ({label: state.rows[i][labelCol.idx], v: m.nums[i]}))
+    .filter(d => d.v !== null && isFinite(d.v))
+    .sort((a, b) => b.v - a.v)
+    .slice(0, 15);
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "bar",
+    data: {
+      labels: arr.map(d => d.label),
+      datasets: [{
+        label: m.name,
+        data: arr.map(d => d.v),
+        backgroundColor: arr.map((_, i) => hexA(PALETTE[i % PALETTE.length], 0.82)),
+        borderRadius: 3, borderWidth: 0
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      indexAxis: "y",
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {
+        x: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}}),
+        y: axisStyle({grid: {display: false}, ticks: {color: "#a8b8c8", font: {size: 10}}})
+      }
+    })
+  }));
+}
+
+function buildSorted(idxs){
+  const el = $("#cSorted");
+  if (!el) return;
+  const m = state.measure;
+  const vals = idxs.map(i => m.nums[i]).filter(v => v !== null && isFinite(v)).sort((a, b) => a - b);
+  const step = Math.max(1, Math.floor(vals.length / 2000));
+  const pts = [];
+  for (let i = 0; i < vals.length; i += step) pts.push({x: i + 1, y: vals[i]});
+  const canvas = document.createElement("canvas");
+  el.innerHTML = "";
+  el.appendChild(canvas);
+  makeChart(canvas, Object.assign({}, CHART_DEFAULTS, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: m.name,
+        data: pts,
+        borderColor: "#4ecdc4",
+        backgroundColor: hexA("#4ecdc4", 0.12),
+        borderWidth: 2, fill: true, tension: 0,
+        pointRadius: 0, pointHoverRadius: 5
+      }]
+    },
+    options: Object.assign({}, CHART_DEFAULTS.options, {
+      plugins: Object.assign({}, CHART_DEFAULTS.plugins, {legend: {display: false}}),
+      scales: {
+        x: axisStyle({type: "linear", grid: {display: false}, title: {display: true, text: "Rank", color: "#7d90a3", font: {size: 10.5}}, ticks: {color: "#7d90a3", font: {size: 10}, callback: v => fmtInt(v)}}),
+        y: axisStyle({ticks: {color: "#7d90a3", font: {size: 10.5}, callback: v => fmtNum(v)}})
+      }
+    })
+  }));
+}
+
+function hexA(hex, a){
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+
+/* ============================================================
+   12. Table
+   ============================================================ */
+function renderTable(){
+  const rows = state.filtered;
+  const cols = state.cols;
+
+  let sorted = rows;
+  if (state.sort.col !== null){
+    const ci = state.sort.col;
+    const col = cols[ci];
+    const dir = state.sort.dir;
+    sorted = rows.slice().sort((a, b) => {
+      let va, vb;
+      if (col.type === "number"){
+        va = parseNumeric(a[ci]); vb = parseNumeric(b[ci]);
+        if (va === null) va = -Infinity;
+        if (vb === null) vb = -Infinity;
+        return (va - vb) * dir;
+      }
+      if (col.type === "date"){
+        va = parseDateWith(a[ci], col.dateFmt); vb = parseDateWith(b[ci], col.dateFmt);
+        if (va === null) va = -Infinity;
+        if (vb === null) vb = -Infinity;
+        return (va - vb) * dir;
+      }
+      va = String(a[ci]).toLowerCase(); vb = String(b[ci]).toLowerCase();
+      return va < vb ? -dir : va > vb ? dir : 0;
+    });
+  }
+
+  const total = sorted.length;
+  const pages = Math.max(1, Math.ceil(total / state.pageSize));
+  if (state.page > pages) state.page = pages;
+  const start = (state.page - 1) * state.pageSize;
+  const slice = sorted.slice(start, start + state.pageSize);
+
+  const head = cols.map((c, i) => {
+    const cls = state.sort.col === i ? "sorted" : "";
+    const ar = state.sort.col === i ? (state.sort.dir > 0 ? "▲" : "▼") : "▲";
+    return '<th class="' + cls + '" data-ci="' + i + '" title="' + esc(c.name) + ' (' + c.type + ')">' +
+      esc(c.name) + '<span class="ar">' + ar + '</span></th>';
+  }).join("");
+
+  const body = slice.map(r => {
+    const tds = r.map((v, i) => {
+      const c = cols[i];
+      if (v === "") return '<td class="nul">—</td>';
+      if (c.type === "number"){
+        const n = parseNumeric(v);
+        return '<td class="num">' + (n === null ? esc(v) : fmtNum(n)) + '</td>';
+      }
+      if (c.type === "date") return '<td class="dt">' + esc(v) + '</td>';
+      return '<td title="' + esc(v) + '">' + esc(v) + '</td>';
+    }).join("");
+    return "<tr>" + tds + "</tr>";
+  }).join("");
+
+  $("#tablewrap").innerHTML =
+    '<div class="thead">' +
+      '<h3>Records</h3>' +
+      '<span class="cnt">' + fmtInt(total) + ' of ' + fmtInt(state.rows.length) + ' rows</span>' +
+      '<div class="tsearch">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+        '<input type="text" id="tSearch" placeholder="Search all columns…" value="' + esc(state.search) + '">' +
+      '</div>' +
+    '</div>' +
+    '<div class="tscroll"><table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
+    '<div class="tfoot">' +
+      '<span>Showing ' + fmtInt(start + 1) + '–' + fmtInt(Math.min(start + state.pageSize, total)) + ' of ' + fmtInt(total) + '</span>' +
+      '<div class="pager">' +
+        '<button id="pPrev"' + (state.page <= 1 ? " disabled" : "") + '>Prev</button>' +
+        '<span style="padding:0 6px">' + state.page + ' / ' + pages + '</span>' +
+        '<button id="pNext"' + (state.page >= pages ? " disabled" : "") + '>Next</button>' +
+      '</div>' +
+    '</div>';
+
+  $$("#tablewrap thead th").forEach(th => {
+    th.onclick = () => {
+      const ci = +th.dataset.ci;
+      if (state.sort.col === ci) state.sort.dir *= -1;
+      else { state.sort.col = ci; state.sort.dir = 1; }
+      renderTable();
+    };
+  });
+
+  const si = $("#tSearch");
+  let tmr;
+  si.oninput = () => {
+    clearTimeout(tmr);
+    tmr = setTimeout(() => {
+      state.search = si.value;
+      state.page = 1;
+      renderAll(true);
+    }, 220);
+  };
+
+  const pv = $("#pPrev"), nx = $("#pNext");
+  if (pv) pv.onclick = () => { state.page--; renderTable(); };
+  if (nx) nx.onclick = () => { state.page++; renderTable(); };
+}
+
+/* ============================================================
+   13. Orchestration
+   ============================================================ */
+function renderAll(keepFocus){
+  applyFilters();
+  renderKPIs();
+  renderCharts();
+  renderTable();
+  const fc = $("#fCount");
+  if (fc) fc.innerHTML = '<b>' + fmtInt(state.filtered.length) + '</b> of ' + fmtInt(state.rows.length) + ' rows';
+}
+
+function exportCSV(){
+  const rows = state.filtered;
+  const q = v => {
+    const s = String(v === null || v === undefined ? "" : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [state.headers.map(q).join(",")];
+  for (const r of rows) lines.push(r.map(q).join(","));
+  const blob = new Blob([lines.join("\n")], {type: "text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "filtered-" + (state.fileName || "data.csv").replace(/\.csv$/i, "") + ".csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Exported " + fmtInt(rows.length) + " rows");
+}
+
+/* ============================================================
+   14. File input wiring
+   ============================================================ */
+function handleFile(file){
+  if (!file) return;
+  if (file.size > 60 * 1024 * 1024){
+    toast("That file is over 60 MB — try a smaller extract.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      loadData(file.name, String(e.target.result));
+      toast("Loaded " + file.name);
+    } catch (err){
+      console.error(err);
+      toast("Could not read that file: " + err.message);
+    }
+  };
+  reader.onerror = () => toast("Could not read that file.");
+  reader.readAsText(file, "utf-8");
+}
+
+$("#btnUpload").onclick = () => $("#fileInput").click();
+$("#btnBrowse").onclick = e => { e.stopPropagation(); $("#fileInput").click(); };
+$("#fileInput").onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  handleFile(f);
+  e.target.value = "";
+};
+
+const dz = $("#dropzone");
+dz.onclick = () => $("#fileInput").click();
+dz.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); $("#fileInput").click(); } };
+["dragenter", "dragover"].forEach(ev => {
+  dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add("drag"); });
+});
+["dragleave", "drop"].forEach(ev => {
+  dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove("drag"); });
+});
+dz.addEventListener("drop", e => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => {
+  e.preventDefault();
+  if (!$("#app").hidden) return;
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+
+/* ============================================================
+   15. Demo dataset (synthetic, clearly labelled)
+   ============================================================ */
+function demoCSV(){
+  const regions = ["North","South","East","West","Central"];
+  const products = ["Alpha","Beta","Gamma","Delta","Epsilon"];
+  const channels = ["Online","Retail","Partner"];
+  const lines = ["order_date,region,product,channel,units,revenue,margin_pct,satisfaction"];
+  let seed = 42;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const start = Date.UTC(2023, 0, 1);
+  for (let i = 0; i < 620; i++){
+    const day = Math.floor(rnd() * 700);
+    const d = new Date(start + day * 86400000);
+    const region = regions[Math.floor(rnd() * regions.length)];
+    const product = products[Math.floor(rnd() * products.length)];
+    const channel = channels[Math.floor(rnd() * channels.length)];
+    const season = 1 + 0.28 * Math.sin(day / 58);
+    const base = {Alpha: 120, Beta: 90, Gamma: 150, Delta: 70, Epsilon: 110}[product];
+    const units = Math.max(1, Math.round(base * season * (0.55 + rnd() * 0.9)));
+    const price = {Alpha: 42, Beta: 65, Gamma: 28, Delta: 95, Epsilon: 51}[product];
+    const revenue = Math.round(units * price * (0.9 + rnd() * 0.25) * 100) / 100;
+    const margin = Math.round((18 + rnd() * 22) * 10) / 10;
+    const sat = Math.round((3.2 + rnd() * 1.7) * 10) / 10;
+    lines.push([d.toISOString().slice(0, 10), region, product, channel, units, revenue, margin, sat].join(","));
+  }
+  return lines.join("\n");
+}
+
+function loadDemo(){
+  loadData("demo_sales.csv", demoCSV());
+  toast("Demo dataset loaded — synthetic, for trying the tool");
+}
+$("#btnDemo").onclick = loadDemo;
+$("#btnDemo2").onclick = e => { e.stopPropagation(); loadDemo(); };
+
+/* expose for automated checks */
+window.__csvStudio = {state, loadData, parseCSV, inferColumns, applyFilters, renderAll};
+</script>
+</body>
+</html>
